@@ -9,7 +9,6 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
 
-    <!-- Header -->
     <header class="bg-orange-600 shadow-md p-4 text-center">
         <h1 class="text-3xl font-extrabold uppercase tracking-wider text-white flex justify-center items-center gap-2">
             <i class="fas fa-basketball-ball text-white"></i> Torneo Basket University
@@ -17,10 +16,8 @@
         <p class="text-orange-100 text-sm mt-1">Classifiche e Risultati gestiti su Schede Separate</p>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         
-        <!-- Selezione Categoria -->
         <div id="category-selection" class="hidden flex flex-col sm:flex-row gap-4 justify-center items-center my-8">
             <button onclick="selectCategory('maschile')" class="w-full sm:w-64 bg-orange-500 hover:bg-orange-400 text-white font-bold py-6 px-8 rounded-2xl shadow-lg transition-all text-xl uppercase tracking-wide flex flex-col items-center gap-2">
                 <i class="fas fa-mars text-3xl"></i> Torneo Maschile
@@ -30,7 +27,6 @@
             </button>
         </div>
 
-        <!-- Dashboard Torneo -->
         <div id="tournament-dashboard" class="hidden">
             <div class="flex justify-between items-center mb-6">
                 <button onclick="goBack()" class="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
@@ -43,10 +39,8 @@
 
             <h2 id="dashboard-title" class="text-2xl font-bold border-b border-gray-700 pb-3 mb-6 uppercase tracking-wide"></h2>
 
-            <!-- Bottoni Navigazione -->
             <div id="navigation-buttons" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8"></div>
 
-            <!-- Contenuto Dinamico -->
             <div id="section-content" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 min-h-[300px]">
                 <div class="text-center py-12 text-gray-400"><i class="fas fa-spinner animate-spin text-2xl mb-2"></i> Caricamento dati...</div>
             </div>
@@ -59,7 +53,7 @@
     </footer>
 
     <script>
-        // Inserisci qui l'ID del tuo foglio Google corrente
+        // ID del tuo foglio Google corrente
         const GOOGLE_SHEET_ID = '1YYP6YIkMWEwkhPOiU5EaYoGdMl86cuz0aaJ5VjqFlEA'; 
 
         let DATA_PARTITE = [];
@@ -104,7 +98,7 @@
                 const datiMaschile = parseCSV(textM, 'maschile');
                 const datiFemminile = parseCSV(textF, 'femminile');
 
-                // Uniamo tutto in un unico grande database locale
+                // Uniamo tutto in un unico database locale
                 DATA_PARTITE = [...datiMaschile, ...datiFemminile];
                 
                 const savedCategory = localStorage.getItem('torneo_categoria');
@@ -115,11 +109,11 @@
                     document.getElementById('tournament-dashboard').classList.add('hidden');
                 }
             } catch (error) {
-                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento. Verifica che il foglio sia pubblico e che le schede si chiamino esattamente "Maschile" e "Femminile".</p>`;
+                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento. Verifica che il foglio sia pubblico ("Chiunque abbia il link può visualizzare") e che le schede in basso si chiamino esattamente "Maschile" e "Femminile".</p>`;
             }
         }
 
-        // Nuovo parser per la struttura a 8 colonne (senza la colonna Categoria)
+        // Parser per la struttura a 8 colonne (senza la colonna Categoria)
         function parseCSV(text, categoria) {
             const lines = text.split('\n');
             const data = [];
@@ -328,7 +322,7 @@
 
             gironiOrdinati.forEach(gNome => {
                 let ordinata = Object.values(gironi[gNome]).sort((a, b) => {
-                    if (b.punti !== a.punti;
+                    if (b.punti !== a.punti) return b.punti - a.punti;
                     return (b.fatti - b.subiti) - (a.fatti - a.subiti);
                 });
 
