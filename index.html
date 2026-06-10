@@ -9,6 +9,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
 
+    <!-- Header -->
     <header class="bg-orange-600 shadow-md p-4 text-center">
         <h1 class="text-3xl font-extrabold uppercase tracking-wider text-white flex justify-center items-center gap-2">
             <i class="fas fa-basketball-ball text-white"></i> Torneo Basket University
@@ -16,9 +17,11 @@
         <p class="text-orange-100 text-sm mt-1">Classifiche e risultati sincronizzati con Google Fogli</p>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         
-        <div id="category-selection" class="flex flex-col sm:flex-row gap-4 justify-center items-center my-8">
+        <!-- Selezione Categoria -->
+        <div id="category-selection" class="hidden flex flex-col sm:flex-row gap-4 justify-center items-center my-8">
             <button onclick="selectCategory('maschile')" class="w-full sm:w-64 bg-orange-500 hover:bg-orange-400 text-white font-bold py-6 px-8 rounded-2xl shadow-lg transition-all text-xl uppercase tracking-wide flex flex-col items-center gap-2">
                 <i class="fas fa-mars text-3xl"></i> Torneo Maschile
             </button>
@@ -27,20 +30,23 @@
             </button>
         </div>
 
+        <!-- Dashboard Torneo -->
         <div id="tournament-dashboard" class="hidden">
             <div class="flex justify-between items-center mb-6">
                 <button onclick="goBack()" class="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
                     <i class="fas fa-arrow-left"></i> Cambia Categoria
                 </button>
-                <button onclick="caricaDati dalFoglio()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 flex items-center gap-1">
+                <button onclick="caricaDatiDalFoglio()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 flex items-center gap-1 transition-colors">
                     <i class="fas fa-sync-alt"></i> Aggiorna Dati
                 </button>
             </div>
 
             <h2 id="dashboard-title" class="text-2xl font-bold border-b border-gray-700 pb-3 mb-6 uppercase tracking-wide"></h2>
 
+            <!-- Bottoni Navigazione -->
             <div id="navigation-buttons" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8"></div>
 
+            <!-- Contenuto Dinamico -->
             <div id="section-content" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 min-h-[300px]">
                 <div class="text-center py-12 text-gray-400"><i class="fas fa-spinner animate-spin text-2xl mb-2"></i> Caricamento dati...</div>
             </div>
@@ -49,12 +55,12 @@
     </main>
 
     <footer class="bg-gray-950 text-center py-4 text-xs text-gray-500 border-t border-gray-800">
-        &copy; 2026 Torneo Basket - Gestione Semplificata
+        &copy; 2026 Torneo Basket - Sincronizzazione Attiva
     </footer>
 
     <script>
         // ==========================================================
-        // SOTTOSTUISCI QUESTO ID CON QUELLO DEL TUO FOGLIO GOOGLE!
+        // ID DEL TUO FOGLIO GOOGLE INSERITO CON SUCCESSO
         // ==========================================================
         const GOOGLE_SHEET_ID = '1yibKRUwMS1QzUCV9kKhLACdyrwkGoXWWlJOwSq6AePE'; 
         
@@ -80,17 +86,32 @@
             ]
         };
 
-        // Carica i dati dal foglio Google appena si apre la pagina
+        // Carica i dati dal foglio Google all'avvio
         window.onload = caricaDatiDalFoglio;
 
         async function caricaDatiDalFoglio() {
             try {
+                // Mostra un piccolo indicatore di caricamento se siamo già dentro una sezione
+                const contentContainer = document.getElementById('section-content');
+                if(contentContainer && currentCategory) {
+                    contentContainer.innerHTML = `<div class="text-center py-12 text-gray-400"><i class="fas fa-spinner animate-spin text-2xl mb-2"></i> Aggiornamento dati in corso...</div>`;
+                }
+
                 const response = await fetch(URL_CSV);
                 const text = await response.text();
                 DATA_PARTITE = parseCSV(text);
-                if (currentCategory) renderContent(currentTab);
+                
+                // Controlla se c'era una categoria salvata precedentemente nel browser
+                const savedCategory = localStorage.getItem('torneo_categoria');
+                if (savedCategory) {
+                    selectCategory(savedCategory, true); // true indica che stiamo ripristinando la sessione
+                } else {
+                    // Mostra la selezione iniziale delle categorie
+                    document.getElementById('category-selection').classList.remove('hidden');
+                    document.getElementById('tournament-dashboard').classList.add('hidden');
+                }
             } catch (error) {
-                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento dei dati. Controlla di aver reso pubblico il foglio Google.</p>`;
+                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento dei dati. Controlla di aver reso pubblico il foglio Google ("Chiunque abbia il link può visualizzare").</p>`;
             }
         }
 
@@ -100,7 +121,6 @@
             for (let i = 1; i < lines.length; i++) {
                 let line = lines[i].trim();
                 if (!line) continue;
-                // Pulisce i virgoletti di Google
                 const cols = line.replace(/"/g, '').split(',');
                 if (cols.length >= 8) {
                     data.push({
@@ -118,8 +138,10 @@
             return data;
         }
 
-        function selectCategory(category) {
+        function selectCategory(category, isRestoring = false) {
             currentCategory = category;
+            localStorage.setItem('torneo_categoria', category); // Salva la categoria selezionata
+            
             document.getElementById('category-selection').classList.add('hidden');
             document.getElementById('tournament-dashboard').classList.remove('hidden');
             
@@ -128,10 +150,22 @@
             titleElement.className = category === 'maschile' ? 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 text-orange-400' : 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 text-pink-500';
 
             renderButtons();
-            switchTab('calendario');
+            
+            // Se stiamo ripristinando la pagina, cerca anche la scheda salvata, altrimenti vai su calendario
+            if (isRestoring) {
+                const savedTab = localStorage.getItem('torneo_tab') || 'calendario';
+                const tabExists = sectionsConfig[category].some(sec => sec.id === savedTab);
+                switchTab(tabExists ? savedTab : 'calendario');
+            } else {
+                switchTab('calendario');
+            }
         }
 
         function goBack() {
+            localStorage.removeItem('torneo_categoria');
+            localStorage.removeItem('torneo_tab');
+            currentCategory = '';
+            
             document.getElementById('category-selection').classList.remove('hidden');
             document.getElementById('tournament-dashboard').classList.add('hidden');
         }
@@ -145,7 +179,7 @@
             sections.forEach(sec => {
                 const button = document.createElement('button');
                 button.id = `btn-${sec.id}`;
-                button.onclick = () => { currentTab = sec.id; switchTab(sec.id); };
+                button.onclick = () => switchTab(sec.id);
                 button.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700`;
                 button.innerHTML = `<i class="fas ${sec.icon} text-lg mb-1"></i> ${sec.label}`;
                 btnContainer.appendChild(button);
@@ -153,6 +187,9 @@
         }
 
         function switchTab(tabId) {
+            currentTab = tabId;
+            localStorage.setItem('torneo_tab', tabId); // Salva la scheda corrente nella memoria del browser
+
             sectionsConfig[currentCategory].forEach(sec => {
                 const btn = document.getElementById(`btn-${sec.id}`);
                 if (btn) btn.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700`;
@@ -168,7 +205,6 @@
 
         function renderContent(tabId) {
             const container = document.getElementById('section-content');
-            // Filtra le partite per categoria attuale
             const filtrate = DATA_PARTITE.filter(p => p.categoria === currentCategory);
 
             if (tabId === 'calendario') {
@@ -240,13 +276,11 @@
         function calcolaEMostraClassifica(container, tutteLePartite) {
             let classifica = {};
             
-            // Trova tutte le squadre uniche inserite in questa categoria
             tutteLePartite.forEach(p => {
-                if (!classifica[p.casa]) classifica[p.casa] = { nome: p.casa, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
-                if (!classifica[p.fuori]) classifica[p.fuori] = { nome: p.fuori, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
+                if (!classifica[p.casa]) classifica[p.casa] = { nome: p.casa, vinte: 0, perse: 0, punti: 0, deeds: 0, fatti: 0, subiti: 0 };
+                if (!classifica[p.fuori]) classifica[p.fuori] = { nome: p.fuori, vinte: 0, perse: 0, punti: 0, deeds: 0, fatti: 0, subiti: 0 };
             });
 
-            // Calcola i punteggi solo per le partite di campionato (escludendo playoff e barilotto)
             tutteLePartite.forEach(p => {
                 if (p.giocata && !p.turno.toLowerCase().includes('playoff') && !p.turno.toLowerCase().includes('barilotto')) {
                     classifica[p.casa].fatti += p.puntiCasa;
@@ -256,7 +290,7 @@
 
                     if (p.puntiCasa > p.puntiFuori) {
                         classifica[p.casa].vinte += 1;
-                        classifica[p.casa].punti += 2; // Basket: 2 punti a vittoria
+                        classifica[p.casa].punti += 2;
                         classifica[p.fuori].perse += 1;
                     } else {
                         classifica[p.fuori].vinte += 1;
@@ -268,7 +302,7 @@
 
             let ordinata = Object.values(classifica).sort((a, b) => {
                 if (b.punti !== a.punti) return b.punti - a.punti;
-                return (b.fatti - b.subiti) - (a.fatti - a.subiti); // Differenza canestri
+                return (b.fatti - b.subiti) - (a.fatti - a.subiti);
             });
 
             if(ordinata.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Inserisci le partite nel foglio per generare la classifica.</p>`; return; }
