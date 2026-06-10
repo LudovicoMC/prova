@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo Basket Automatico</title>
+    <title>Torneo Basket Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
         <h1 class="text-3xl font-extrabold uppercase tracking-wider text-white flex justify-center items-center gap-2">
             <i class="fas fa-basketball-ball text-white"></i> Torneo Basket University
         </h1>
-        <p class="text-orange-100 text-sm mt-1">Classifiche e risultati generati automaticamente</p>
+        <p class="text-orange-100 text-sm mt-1">Classifiche e risultati sincronizzati con Google Fogli</p>
     </header>
 
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
@@ -21,73 +21,49 @@
         <div id="category-selection" class="flex flex-col sm:flex-row gap-4 justify-center items-center my-8">
             <button onclick="selectCategory('maschile')" class="w-full sm:w-64 bg-orange-500 hover:bg-orange-400 text-white font-bold py-6 px-8 rounded-2xl shadow-lg transition-all text-xl uppercase tracking-wide flex flex-col items-center gap-2">
                 <i class="fas fa-mars text-3xl"></i> Torneo Maschile
-                <span class="text-xs font-normal lowercase opacity-80">(16 Squadre)</span>
             </button>
             <button onclick="selectCategory('femminile')" class="w-full sm:w-64 bg-pink-600 hover:bg-pink-500 text-white font-bold py-6 px-8 rounded-2xl shadow-lg transition-all text-xl uppercase tracking-wide flex flex-col items-center gap-2">
                 <i class="fas fa-venus text-3xl"></i> Torneo Femminile
-                <span class="text-xs font-normal lowercase opacity-80">(4 Squadre)</span>
             </button>
         </div>
 
         <div id="tournament-dashboard" class="hidden">
-            <button onclick="goBack()" class="mb-6 text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
-                <i class="fas fa-arrow-left"></i> Cambia Categoria
-            </button>
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="goBack()" class="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
+                    <i class="fas fa-arrow-left"></i> Cambia Categoria
+                </button>
+                <button onclick="caricaDati dalFoglio()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg border border-gray-700 flex items-center gap-1">
+                    <i class="fas fa-sync-alt"></i> Aggiorna Dati
+                </button>
+            </div>
 
             <h2 id="dashboard-title" class="text-2xl font-bold border-b border-gray-700 pb-3 mb-6 uppercase tracking-wide"></h2>
 
             <div id="navigation-buttons" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8"></div>
 
-            <div id="section-content" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 min-h-[300px]"></div>
+            <div id="section-content" class="bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-700 min-h-[300px]">
+                <div class="text-center py-12 text-gray-400"><i class="fas fa-spinner animate-spin text-2xl mb-2"></i> Caricamento dati...</div>
+            </div>
         </div>
 
     </main>
 
     <footer class="bg-gray-950 text-center py-4 text-xs text-gray-500 border-t border-gray-800">
-        &copy; 2026 Torneo Basket - Classifiche in tempo reale
+        &copy; 2026 Torneo Basket - Gestione Semplificata
     </footer>
 
     <script>
-        // ==========================================
-        // 1. INSERISCI QUI LE SQUADRE
-        // ==========================================
-        const SQUADRE_MASCHILE = [
-            "Team Alpha", "Team Beta", "Team Gamma", "Team Delta", 
-            "Team Epsilon", "Team Zeta", "Team Eta", "Team Theta",
-            "Team Iota", "Team Kappa", "Team Lambda", "Team Mu",
-            "Team Nu", "Team Xi", "Team Omicron", "Team Pi"
-        ]; // 16 Squadre
+        // ==========================================================
+        // SOTTOSTUISCI QUESTO ID CON QUELLO DEL TUO FOGLIO GOOGLE!
+        // ==========================================================
+        const GOOGLE_SHEET_ID = '1yibKRUwMS1QzUCV9kKhLACdyrwkGoXWWlJOwSq6AePE'; 
+        
+        const URL_CSV = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-        const SQUADRE_FEMMINILE = [
-            "Athena Basket", "Hera Team", "Artemis Club", "Aphrodite Squad"
-        ]; // 4 Squadre
-
-        // ==========================================
-        // 2. INSERISCI QUI I RISULTATI DELLE PARTITE
-        //    Se 'giocata' è false, va in Calendario.
-        //    Se 'giocata' è true, calcola il risultato in Classifica e va in Risultati.
-        // ==========================================
-        const DATA_PARTITE = {
-            maschile: [
-                { turno: "Giornata 1", casa: "Team Alpha", fuori: "Team Beta", puntiCasa: 78, puntiFuori: 72, giocata: true, data: "15/06 Ore 18:00" },
-                { turno: "Giornata 1", casa: "Team Gamma", fuori: "Team Delta", puntiCasa: 60, puntiFuori: 65, giocata: true, data: "15/06 Ore 19:30" },
-                { turno: "Giornata 1", casa: "Team Epsilon", fuori: "Team Zeta", puntiCasa: 0, puntiFuori: 0, giocata: false, data: "16/06 Ore 18:00" },
-                { turno: "Giornata 2", casa: "Team Beta", fuori: "Team Gamma", puntiCasa: 0, puntiFuori: 0, giocata: false, data: "20/06 Ore 18:00" }
-            ],
-            femminile: [
-                { turno: "Giornata 1", casa: "Athena Basket", fuori: "Hera Team", puntiCasa: 55, puntiFuori: 58, giocata: true, data: "18/06 Ore 17:00" },
-                { turno: "Giornata 1", casa: "Artemis Club", fuori: "Aphrodite Squad", puntiCasa: 0, puntiFuori: 0, giocata: false, data: "18/06 Ore 19:00" }
-            ]
-        };
-
-        // Altri dati statici per le sezioni speciali
-        const infoSpeciali = {
-            barilotto: `<h3 class="text-xl font-bold mb-4 text-amber-500"><i class="fas fa-beer mr-2"></i>Torneo Barilotto</h3><p class="text-gray-300">Qui puoi scrivere le regole o inserire a mano informazioni sul torneo del Barilotto maschile.</p>`,
-            playoff: `<h3 class="text-xl font-bold mb-4 text-yellow-500"><i class="fas fa-crown mr-2"></i>Tabellone Playoff</h3><p class="text-gray-300">Il tabellone degli scontri diretti verrà compilato qui al termine della stagione regolare.</p>`
-        };
-
-        // Variables di stato interne
+        let DATA_PARTITE = [];
         let currentCategory = '';
+        let currentTab = 'calendario';
+
         const sectionsConfig = {
             maschile: [
                 { id: 'calendario', label: 'Calendario', icon: 'fa-calendar-alt' },
@@ -104,6 +80,44 @@
             ]
         };
 
+        // Carica i dati dal foglio Google appena si apre la pagina
+        window.onload = caricaDatiDalFoglio;
+
+        async function caricaDatiDalFoglio() {
+            try {
+                const response = await fetch(URL_CSV);
+                const text = await response.text();
+                DATA_PARTITE = parseCSV(text);
+                if (currentCategory) renderContent(currentTab);
+            } catch (error) {
+                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento dei dati. Controlla di aver reso pubblico il foglio Google.</p>`;
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = text.split('\n');
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+                // Pulisce i virgoletti di Google
+                const cols = line.replace(/"/g, '').split(',');
+                if (cols.length >= 8) {
+                    data.push({
+                        categoria: cols[0].toLowerCase().trim(),
+                        turno: cols[1].trim(),
+                        data: cols[2].trim(),
+                        casa: cols[3].trim(),
+                        puntiCasa: parseInt(cols[4]) || 0,
+                        puntiFuori: parseInt(cols[5]) || 0,
+                        fuori: cols[6].trim(),
+                        giocata: cols[7].toUpperCase().trim() === 'SI'
+                    });
+                }
+            }
+            return data;
+        }
+
         function selectCategory(category) {
             currentCategory = category;
             document.getElementById('category-selection').classList.add('hidden');
@@ -111,7 +125,7 @@
             
             const titleElement = document.getElementById('dashboard-title');
             titleElement.innerText = category === 'maschile' ? 'Torneo Maschile' : 'Torneo Femminile';
-            titleElement.className = category === 'maschile' ? 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 uppercase tracking-wide text-orange-400' : 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 uppercase tracking-wide text-pink-500';
+            titleElement.className = category === 'maschile' ? 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 text-orange-400' : 'text-2xl font-bold border-b border-gray-700 pb-3 mb-6 text-pink-500';
 
             renderButtons();
             switchTab('calendario');
@@ -131,8 +145,8 @@
             sections.forEach(sec => {
                 const button = document.createElement('button');
                 button.id = `btn-${sec.id}`;
-                button.onclick = () => switchTab(sec.id);
-                button.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700`;
+                button.onclick = () => { currentTab = sec.id; switchTab(sec.id); };
+                button.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700`;
                 button.innerHTML = `<i class="fas ${sec.icon} text-lg mb-1"></i> ${sec.label}`;
                 btnContainer.appendChild(button);
             });
@@ -141,120 +155,144 @@
         function switchTab(tabId) {
             sectionsConfig[currentCategory].forEach(sec => {
                 const btn = document.getElementById(`btn-${sec.id}`);
-                if (btn) btn.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700`;
+                if (btn) btn.className = `flex flex-col items-center justify-center p-3 rounded-xl font-semibold text-sm bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700`;
             });
 
             const activeBtn = document.getElementById(`btn-${tabId}`);
             if (activeBtn) {
                 const colorClass = currentCategory === 'maschile' ? 'border-orange-500 bg-orange-600' : 'border-pink-500 bg-pink-600';
-                activeBtn.className = `flex flex-col items-center justify-center p-3 rounded-xl font-bold text-sm transition-all border ${colorClass} text-white shadow-lg`;
+                activeBtn.className = `flex flex-col items-center justify-center p-3 rounded-xl font-bold text-sm border ${colorClass} text-white shadow-lg`;
             }
-
             renderContent(tabId);
         }
 
-        // FUNZIONE CHE GENERA IL CONTENUTO IN BASE AI DATI
         function renderContent(tabId) {
             const container = document.getElementById('section-content');
-            const partite = DATA_PARTITE[currentCategory];
+            // Filtra le partite per categoria attuale
+            const filtrate = DATA_PARTITE.filter(p => p.categoria === currentCategory);
 
             if (tabId === 'calendario') {
-                const daGiocare = partite.filter(p => !p.giocata);
-                if(daGiocare.length === 0) {
-                    container.innerHTML = `<p class="text-gray-400 text-center py-8">Nessuna partita in calendario. Tutte le partite sono state giocate!</p>`;
-                    return;
-                }
-                let html = `<h3 class="text-xl font-bold mb-4 text-orange-400"><i class="fas fa-calendar-alt mr-2"></i>Prossime Partite (Calendario)</h3><div class="space-y-3">`;
-                daGiocare.forEach(p => {
-                    html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                                <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno} - ${p.data}</span>
-                                <span class="font-bold text-lg">${p.casa} <span class="text-orange-500 font-normal">vs</span> ${p.fuori}</span>
-                             </div>`;
-                });
-                html += `</div>`;
-                container.innerHTML = html;
-
+                const daGiocare = filtrate.filter(p => !p.giocata && !p.turno.toLowerCase().includes('playoff') && !p.turno.toLowerCase().includes('barilotto'));
+                stampaListaPartite(container, daGiocare, "Prossime Partite in Calendario", "fa-calendar-alt", "text-orange-400");
+                
             } else if (tabId === 'risultati') {
-                const giocate = partite.filter(p => p.giocata);
-                if(giocate.length === 0) {
-                    container.innerHTML = `<p class="text-gray-400 text-center py-8">Il torneo non è ancora iniziato. Nessun risultato disponibile.</p>`;
-                    return;
-                }
-                let html = `<h3 class="text-xl font-bold mb-4 text-green-400"><i class="fas fa-list-ol mr-2"></i>Risultati Incontri</h3><div class="space-y-3">`;
-                giocate.forEach(p => {
-                    html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                                <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno}</span>
-                                <div class="flex items-center gap-4 text-lg">
-                                    <span class="${p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
-                                    <span class="bg-gray-900 px-3 py-1 rounded font-mono font-bold text-yellow-400">${p.puntiCasa} - ${p.puntiFuori}</span>
-                                    <span class="${p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
-                                </div>
-                             </div>`;
-                });
-                html += `</div>`;
-                container.innerHTML = html;
+                const giocate = filtrate.filter(p => p.giocata && !p.turno.toLowerCase().includes('playoff') && !p.turno.toLowerCase().includes('barilotto'));
+                stampaListaRisultati(container, giocate, "Risultati Incontri", "fa-list-ol", "text-green-400");
+
+            } else if (tabId === 'barilotto') {
+                const matchBarilotto = filtrate.filter(p => p.turno.toLowerCase().includes('barilotto'));
+                stampaSezioneMista(container, matchBarilotto, "Torneo Barilotto", "fa-beer", "text-amber-500");
+
+            } else if (tabId === 'playoff') {
+                const matchPlayoff = filtrate.filter(p => p.turno.toLowerCase().includes('playoff'));
+                stampaSezioneMista(container, matchPlayoff, "Fase Playoff", "fa-crown", "text-yellow-500");
 
             } else if (tabId === 'classifica') {
-                const squadre = currentCategory === 'maschile' ? SQUADRE_MASCHILE : SQUADRE_FEMMINILE;
-                
-                // Inizializza tabella statistiche vuota per ogni squadra
-                let classifica = {};
-                squadre.forEach(s => {
-                    classifica[s] = { nome: s, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
-                });
-
-                // Elabora i risultati delle sole partite giocate
-                partite.forEach(p => {
-                    if (p.giocata) {
-                        classifica[p.casa].fatti += p.puntiCasa;
-                        classifica[p.casa].subiti += p.puntiFuori;
-                        classifica[p.fuori].fatti += p.puntiFuori;
-                        classifica[p.fuori].subiti += p.puntiCasa;
-
-                        if (p.puntiCasa > p.puntiFuori) {
-                            classifica[p.casa].vinte += 1;
-                            classifica[p.casa].punti += 2; // 2 punti a chi vince nel basket
-                            classifica[p.fuori].perse += 1;
-                        } else {
-                            classifica[p.fuori].vinte += 1;
-                            classifica[p.fuori].punti += 2;
-                            classifica[p.casa].perse += 1;
-                        }
-                    }
-                });
-
-                // Trasforma in array e ordina (Prima per Punti, poi per Differenza Canestri)
-                let classificaOrdinata = Object.values(classifica).sort((a, b) => {
-                    if (b.punti !== a.punti) return b.punti - a.punti;
-                    return (b.fatti - b.subiti) - (a.fatti - a.subiti); // Differenza canestri
-                });
-
-                let html = `<h3 class="text-xl font-bold mb-4 text-yellow-500"><i class="fas fa-trophy mr-2"></i>Classifica Generale</h3>
-                            <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
-                            <thead><tr class="border-b border-gray-700 text-gray-400 text-sm">
-                                <th class="py-3 px-2">Pos</th><th class="py-3">Squadra</th>
-                                <th class="py-3 text-center">Punti</th><th class="py-3 text-center">V</th><th class="py-3 text-center">P</th>
-                                <th class="py-3 text-center hidden sm:table-cell">Diff</th>
-                            </tr></thead><tbody>`;
-                
-                classificaOrdinata.forEach((sq, index) => {
-                    const diff = sq.fatti - sq.subiti;
-                    html += `<tr class="border-b border-gray-800 hover:bg-gray-750 transition-colors">
-                                <td class="py-3 px-2 font-bold text-orange-400">${index + 1}</td>
-                                <td class="py-3 font-semibold">${sq.nome}</td>
-                                <td class="py-3 text-center font-bold text-green-400">${sq.punti}</td>
-                                <td class="py-3 text-center">${sq.vinte}</td>
-                                <td class="py-3 text-center">${sq.perse}</td>
-                                <td class="py-3 text-center text-xs text-gray-400 hidden sm:table-cell font-mono">${diff > 0 ? '+' + diff : diff}</td>
-                             </tr>`;
-                });
-                html += `</tbody></table></div>`;
-                container.innerHTML = html;
-
-            } else {
-                // Barilotto o Playoff (Sezioni statiche)
-                container.innerHTML = infoSpeciali[tabId] || `<p class="text-gray-400">In costruzione...</p>`;
+                calcolaEMostraClassifica(container, filtrate);
             }
+        }
+
+        function stampaListaPartite(container, lista, titolo, icona, coloreTesto) {
+            if(lista.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Nessun match in questa sezione al momento.</p>`; return; }
+            let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
+            lista.forEach(p => {
+                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno} - ${p.data}</span>
+                            <span class="font-bold text-lg">${p.casa} <span class="text-orange-500 font-normal">vs</span> ${p.fuori}</span>
+                         </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
+
+        function stampaListaRisultati(container, lista, titolo, icona, coloreTesto) {
+            if(lista.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Nessun risultato disponibile.</p>`; return; }
+            let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
+            lista.forEach(p => {
+                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno}</span>
+                            <div class="flex items-center gap-4 text-lg">
+                                <span class="${p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
+                                <span class="bg-gray-900 px-3 py-1 rounded font-mono font-bold text-yellow-400">${p.puntiCasa} - ${p.puntiFuori}</span>
+                                <span class="${p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
+                            </div>
+                         </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
+
+        function stampaSezioneMista(container, lista, titolo, icona, coloreTesto) {
+            if(lista.length === 0) { container.innerHTML = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><p class="text-gray-400 text-center py-8">In attesa della generazione degli accoppiamenti...</p>`; return; }
+            let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
+            lista.forEach(p => {
+                const punteggio = p.giocata ? `<span class="bg-gray-900 px-3 py-1 rounded font-mono font-bold text-yellow-400">${p.puntiCasa} - ${p.puntiFuori}</span>` : `<span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">${p.data}</span>`;
+                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno}</span>
+                            <div class="flex items-center gap-4 text-lg">
+                                <span class="${p.giocata && p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
+                                ${punteggio}
+                                <span class="${p.giocata && p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
+                            </div>
+                         </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
+
+        function calcolaEMostraClassifica(container, tutteLePartite) {
+            let classifica = {};
+            
+            // Trova tutte le squadre uniche inserite in questa categoria
+            tutteLePartite.forEach(p => {
+                if (!classifica[p.casa]) classifica[p.casa] = { nome: p.casa, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
+                if (!classifica[p.fuori]) classifica[p.fuori] = { nome: p.fuori, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
+            });
+
+            // Calcola i punteggi solo per le partite di campionato (escludendo playoff e barilotto)
+            tutteLePartite.forEach(p => {
+                if (p.giocata && !p.turno.toLowerCase().includes('playoff') && !p.turno.toLowerCase().includes('barilotto')) {
+                    classifica[p.casa].fatti += p.puntiCasa;
+                    classifica[p.casa].subiti += p.puntiFuori;
+                    classifica[p.fuori].fatti += p.puntiFuori;
+                    classifica[p.fuori].subiti += p.puntiCasa;
+
+                    if (p.puntiCasa > p.puntiFuori) {
+                        classifica[p.casa].vinte += 1;
+                        classifica[p.casa].punti += 2; // Basket: 2 punti a vittoria
+                        classifica[p.fuori].perse += 1;
+                    } else {
+                        classifica[p.fuori].vinte += 1;
+                        classifica[p.fuori].punti += 2;
+                        classifica[p.casa].perse += 1;
+                    }
+                }
+            });
+
+            let ordinata = Object.values(classifica).sort((a, b) => {
+                if (b.punti !== a.punti) return b.punti - a.punti;
+                return (b.fatti - b.subiti) - (a.fatti - a.subiti); // Differenza canestri
+            });
+
+            if(ordinata.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Inserisci le partite nel foglio per generare la classifica.</p>`; return; }
+
+            let html = `<h3 class="text-xl font-bold mb-4 text-yellow-500"><i class="fas fa-trophy mr-2"></i>Classifica Generale</h3>
+                        <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
+                        <thead><tr class="border-b border-gray-700 text-gray-400 text-sm">
+                            <th class="py-3 px-2">Pos</th><th class="py-3">Squadra</th>
+                            <th class="py-3 text-center">Punti</th><th class="py-3 text-center">V</th><th class="py-3 text-center">P</th>
+                            <th class="py-3 text-center hidden sm:table-cell">Diff</th>
+                        </tr></thead><tbody>`;
+            
+            ordinata.forEach((sq, index) => {
+                const diff = sq.fatti - sq.subiti;
+                html += `<tr class="border-b border-gray-800 hover:bg-gray-750 transition-colors">
+                            <td class="py-3 px-2 font-bold text-orange-400">${index + 1}</td>
+                            <td class="py-3 font-semibold">${sq.nome}</td>
+                            <td class="py-3 text-center font-bold text-green-400">${sq.punti}</td>
+                            <td class="py-3 text-center">${sq.vinte}</td>
+                            <td class="py-3 text-center">${sq.perse}</td>
+                            <td class="py-3 text-center text-xs text-gray-400 hidden sm:table-cell font-mono">${diff > 0 ? '+' + diff : diff}</td>
+                         </tr>`;
+            });
+            container.innerHTML = html + `</tbody></table></div>`;
         }
     </script>
 </body>
