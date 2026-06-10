@@ -59,11 +59,7 @@
     </footer>
 
     <script>
-        // ==========================================================
-        // ID DEL TUO FOGLIO GOOGLE INSERITO CON SUCCESSO
-        // ==========================================================
         const GOOGLE_SHEET_ID = '1yibKRUwMS1QzUCV9kKhLACdyrwkGoXWWlJOwSq6AePE'; 
-        
         const URL_CSV = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv`;
 
         let DATA_PARTITE = [];
@@ -86,12 +82,10 @@
             ]
         };
 
-        // Carica i dati dal foglio Google all'avvio
         window.onload = caricaDatiDalFoglio;
 
         async function caricaDatiDalFoglio() {
             try {
-                // Mostra un piccolo indicatore di caricamento se siamo già dentro una sezione
                 const contentContainer = document.getElementById('section-content');
                 if(contentContainer && currentCategory) {
                     contentContainer.innerHTML = `<div class="text-center py-12 text-gray-400"><i class="fas fa-spinner animate-spin text-2xl mb-2"></i> Aggiornamento dati in corso...</div>`;
@@ -101,17 +95,15 @@
                 const text = await response.text();
                 DATA_PARTITE = parseCSV(text);
                 
-                // Controlla se c'era una categoria salvata precedentemente nel browser
                 const savedCategory = localStorage.getItem('torneo_categoria');
                 if (savedCategory) {
-                    selectCategory(savedCategory, true); // true indica che stiamo ripristinando la sessione
+                    selectCategory(savedCategory, true);
                 } else {
-                    // Mostra la selezione iniziale delle categorie
                     document.getElementById('category-selection').classList.remove('hidden');
                     document.getElementById('tournament-dashboard').classList.add('hidden');
                 }
             } catch (error) {
-                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento dei dati. Controlla di aver reso pubblico il foglio Google ("Chiunque abbia il link può visualizzare").</p>`;
+                document.getElementById('section-content').innerHTML = `<p class="text-red-400 text-center">Errore nel caricamento dei dati. Controlla i permessi del foglio Google.</p>`;
             }
         }
 
@@ -140,7 +132,7 @@
 
         function selectCategory(category, isRestoring = false) {
             currentCategory = category;
-            localStorage.setItem('torneo_categoria', category); // Salva la categoria selezionata
+            localStorage.setItem('torneo_categoria', category);
             
             document.getElementById('category-selection').classList.add('hidden');
             document.getElementById('tournament-dashboard').classList.remove('hidden');
@@ -151,7 +143,6 @@
 
             renderButtons();
             
-            // Se stiamo ripristinando la pagina, cerca anche la scheda salvata, altrimenti vai su calendario
             if (isRestoring) {
                 const savedTab = localStorage.getItem('torneo_tab') || 'calendario';
                 const tabExists = sectionsConfig[category].some(sec => sec.id === savedTab);
@@ -165,7 +156,6 @@
             localStorage.removeItem('torneo_categoria');
             localStorage.removeItem('torneo_tab');
             currentCategory = '';
-            
             document.getElementById('category-selection').classList.remove('hidden');
             document.getElementById('tournament-dashboard').classList.add('hidden');
         }
@@ -188,7 +178,7 @@
 
         function switchTab(tabId) {
             currentTab = tabId;
-            localStorage.setItem('torneo_tab', tabId); // Salva la scheda corrente nella memoria del browser
+            localStorage.setItem('torneo_tab', tabId);
 
             sectionsConfig[currentCategory].forEach(sec => {
                 const btn = document.getElementById(`btn-${sec.id}`);
@@ -232,9 +222,13 @@
             if(lista.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Nessun match in questa sezione al momento.</p>`; return; }
             let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
             lista.forEach(p => {
-                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno} - ${p.data}</span>
-                            <span class="font-bold text-lg">${p.casa} <span class="text-orange-500 font-normal">vs</span> ${p.fuori}</span>
+                html += `<div class="bg-gray-700 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono w-full sm:w-auto text-center sm:text-left">${p.turno} - ${p.data}</span>
+                            <div class="flex items-center justify-center gap-2 sm:gap-4 text-sm sm:text-lg w-full sm:w-auto">
+                                <span class="text-right flex-1 sm:flex-none font-semibold truncate max-w-[120px] sm:max-w-none">${p.casa}</span>
+                                <span class="text-orange-500 font-normal text-xs uppercase tracking-wider px-1 flex-shrink-0">vs</span>
+                                <span class="text-left flex-1 sm:flex-none font-semibold truncate max-w-[120px] sm:max-w-none">${p.fuori}</span>
+                            </div>
                          </div>`;
             });
             container.innerHTML = html + `</div>`;
@@ -244,12 +238,12 @@
             if(lista.length === 0) { container.innerHTML = `<p class="text-gray-400 text-center py-8">Nessun risultato disponibile.</p>`; return; }
             let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
             lista.forEach(p => {
-                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno}</span>
-                            <div class="flex items-center gap-4 text-lg">
-                                <span class="${p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
-                                <span class="bg-gray-900 px-3 py-1 rounded font-mono font-bold text-yellow-400">${p.puntiCasa} - ${p.puntiFuori}</span>
-                                <span class="${p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
+                html += `<div class="bg-gray-700 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono w-full sm:w-auto text-center sm:text-left">${p.turno}</span>
+                            <div class="flex items-center justify-center gap-2 sm:gap-4 text-sm sm:text-lg w-full sm:w-auto">
+                                <span class="text-right flex-1 sm:flex-none truncate max-w-[120px] sm:max-w-none ${p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
+                                <span class="bg-gray-900 px-2.5 py-1 rounded font-mono font-bold text-yellow-400 text-xs sm:text-base whitespace-nowrap flex-shrink-0 shadow-inner">${p.puntiCasa} - ${p.puntiFuori}</span>
+                                <span class="text-left flex-1 sm:flex-none truncate max-w-[120px] sm:max-w-none ${p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
                             </div>
                          </div>`;
             });
@@ -260,13 +254,16 @@
             if(lista.length === 0) { container.innerHTML = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><p class="text-gray-400 text-center py-8">In attesa della generazione degli accoppiamenti...</p>`; return; }
             let html = `<h3 class="text-xl font-bold mb-4 ${coloreTesto}"><i class="fas ${icona} mr-2"></i>${titolo}</h3><div class="space-y-3">`;
             lista.forEach(p => {
-                const punteggio = p.giocata ? `<span class="bg-gray-900 px-3 py-1 rounded font-mono font-bold text-yellow-400">${p.puntiCasa} - ${p.puntiFuori}</span>` : `<span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">${p.data}</span>`;
-                html += `<div class="bg-gray-700 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono">${p.turno}</span>
-                            <div class="flex items-center gap-4 text-lg">
-                                <span class="${p.giocata && p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
+                const punteggio = p.giocata 
+                    ? `<span class="bg-gray-900 px-2.5 py-1 rounded font-mono font-bold text-yellow-400 text-xs sm:text-base whitespace-nowrap flex-shrink-0 shadow-inner">${p.puntiCasa} - ${p.puntiFuori}</span>` 
+                    : `<span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono whitespace-nowrap flex-shrink-0">${p.data}</span>`;
+                
+                html += `<div class="bg-gray-700 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <span class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400 font-mono w-full sm:w-auto text-center sm:text-left">${p.turno}</span>
+                            <div class="flex items-center justify-center gap-2 sm:gap-4 text-sm sm:text-lg w-full sm:w-auto">
+                                <span class="text-right flex-1 sm:flex-none truncate max-w-[120px] sm:max-w-none ${p.giocata && p.puntiCasa > p.puntiFuori ? 'font-bold text-white': 'text-gray-400'}">${p.casa}</span>
                                 ${punteggio}
-                                <span class="${p.giocata && p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
+                                <span class="text-left flex-1 sm:flex-none truncate max-w-[120px] sm:max-w-none ${p.giocata && p.puntiFuori > p.puntiCasa ? 'font-bold text-white': 'text-gray-400'}">${p.fuori}</span>
                             </div>
                          </div>`;
             });
@@ -277,8 +274,8 @@
             let classifica = {};
             
             tutteLePartite.forEach(p => {
-                if (!classifica[p.casa]) classifica[p.casa] = { nome: p.casa, vinte: 0, perse: 0, punti: 0, deeds: 0, fatti: 0, subiti: 0 };
-                if (!classifica[p.fuori]) classifica[p.fuori] = { nome: p.fuori, vinte: 0, perse: 0, punti: 0, deeds: 0, fatti: 0, subiti: 0 };
+                if (!classifica[p.casa]) classifica[p.casa] = { nome: p.casa, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
+                if (!classifica[p.fuori]) classifica[p.fuori] = { nome: p.fuori, vinte: 0, perse: 0, punti: 0, fatti: 0, subiti: 0 };
             });
 
             tutteLePartite.forEach(p => {
@@ -319,10 +316,10 @@
                 const diff = sq.fatti - sq.subiti;
                 html += `<tr class="border-b border-gray-800 hover:bg-gray-750 transition-colors">
                             <td class="py-3 px-2 font-bold text-orange-400">${index + 1}</td>
-                            <td class="py-3 font-semibold">${sq.nome}</td>
-                            <td class="py-3 text-center font-bold text-green-400">${sq.punti}</td>
-                            <td class="py-3 text-center">${sq.vinte}</td>
-                            <td class="py-3 text-center">${sq.perse}</td>
+                            <td class="py-3 font-semibold text-sm sm:text-base">${sq.nome}</td>
+                            <td class="py-3 text-center font-bold text-green-400 text-sm sm:text-base">${sq.punti}</td>
+                            <td class="py-3 text-center text-sm sm:text-base">${sq.vinte}</td>
+                            <td class="py-3 text-center text-sm sm:text-base">${sq.perse}</td>
                             <td class="py-3 text-center text-xs text-gray-400 hidden sm:table-cell font-mono">${diff > 0 ? '+' + diff : diff}</td>
                          </tr>`;
             });
